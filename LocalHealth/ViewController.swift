@@ -11,7 +11,7 @@ import CloudKit
 import MultipeerConnectivity
 import CoreMotion
 
-class ViewController: UITableViewController, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate, MCSessionDelegate {
+class ViewController: UICollectionViewController, MCNearbyServiceAdvertiserDelegate, MCNearbyServiceBrowserDelegate, MCSessionDelegate {
     
     required init?(coder aDecoder: NSCoder) {
         
@@ -213,6 +213,11 @@ class ViewController: UITableViewController, MCNearbyServiceAdvertiserDelegate, 
         didSet {
             
             dates = datesByRecordID.values.sort({ (date1, date2) -> Bool in
+                
+                if date1.startDate.compare(date2.startDate) == .OrderedSame {
+                    return date1.numberOfSteps < date2.numberOfSteps
+                }
+                
                 return date1.startDate.compare(date2.startDate) == .OrderedAscending
             })
         }
@@ -221,7 +226,7 @@ class ViewController: UITableViewController, MCNearbyServiceAdvertiserDelegate, 
     var dates = [Walk]() {
         didSet {
             if isViewLoaded() {
-                tableView.reloadData()
+                collectionView!.reloadData()
             }
         }
     }
@@ -304,7 +309,7 @@ class ViewController: UITableViewController, MCNearbyServiceAdvertiserDelegate, 
             
             if let data = data {
                 
-                self.addNumberWithData(Walk(numberOfSteps: data.numberOfSteps.integerValue, startDate: data.startDate))
+                self.addNumberWithData(Walk(numberOfSteps: data.numberOfSteps.integerValue, startDate: NSDate()))
             }
         }
     }
@@ -328,16 +333,21 @@ class ViewController: UITableViewController, MCNearbyServiceAdvertiserDelegate, 
         }
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return dates.count
     }
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    override func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
-        let cell = tableView.dequeueReusableCellWithIdentifier("Number Cell", forIndexPath: indexPath)
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("Walk Cell", forIndexPath: indexPath) as! WalkCell
         
-        cell.textLabel!.text = dates[indexPath.row].numberOfSteps.description
+        cell.label.text = dates[indexPath.row].numberOfSteps.description
         
         return cell
     }
+}
+
+class WalkCell: UICollectionViewCell {
+    
+    @IBOutlet weak var label: UILabel!
 }
